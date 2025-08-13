@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+runpod-pack/preset-contour/.venv/
+runpod-pack/preset-contour/work/
+runpod-pack/preset-contour/output/
+comparisons/
+downloads*/
+downloads_sdxl/
+*.zip
+input/
+*.log
