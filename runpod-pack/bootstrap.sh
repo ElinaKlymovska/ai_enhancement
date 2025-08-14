@@ -20,7 +20,7 @@ mkdir -p "$A1111_DIR/extensions"
 [ -d "$A1111_DIR/extensions/sd-webui-controlnet" ] || git clone https://github.com/Mikubill/sd-webui-controlnet "$A1111_DIR/extensions/sd-webui-controlnet"
 [ -d "$A1111_DIR/extensions/adetailer" ] || git clone https://github.com/Bing-su/adetailer "$A1111_DIR/extensions/adetailer"
 
-echo "[*] Model dirs"
+echo "[*] Model directories"
 mkdir -p "$A1111_DIR/models/Stable-diffusion" "$A1111_DIR/models/ControlNet"
 
 echo "[*] Auto-download SDXL + ControlNets"
@@ -48,7 +48,7 @@ fi
 until curl -s "http://127.0.0.1:$PORT/sdapi/v1/sd-models" >/dev/null; do sleep 2; done
 echo " - API up"
 
-echo "[*] Preset venv & deps"
+echo "[*] Preset venv & dependencies"
 cd "$PRESET_DIR"
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt

@@ -1,15 +1,65 @@
-.DS_Store
+# Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 .env
-.env.*
-runpod-pack/preset-contour/.venv/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
 runpod-pack/preset-contour/work/
 runpod-pack/preset-contour/output/
-comparisons/
-downloads*/
-downloads_sdxl/
-*.zip
-input/
+runpod-pack/preset-contour/input/
+runpod-pack/preset-contour/.venv/
+runpod-pack/stable-diffusion-webui/
+runpod-pack/models/
+
+# Logs
 *.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/

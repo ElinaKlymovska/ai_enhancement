@@ -1,16 +1,24 @@
 
-import os, io, base64, argparse, yaml, requests
+import os
+import io
+import base64
+import argparse
+import yaml
+import requests
 from PIL import Image
+
 
 def load_cfg(path):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
 
 def img_to_b64(path):
     with Image.open(path) as im:
         buf = io.BytesIO()
         im.save(buf, format="PNG")
         return base64.b64encode(buf.getvalue()).decode("utf-8")
+
 
 def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
     ep = cfg["general"]["a1111_endpoint"]
@@ -20,7 +28,7 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
     mask_b64 = img_to_b64(face_mask_path)
     contour_b64 = img_to_b64(contour_map_path) if os.path.exists(contour_map_path) else init_b64
 
-    # Pick safe dimensions (<= 768 and multiples of 64) to avoid backend 500s on limited hardware
+    # Safe dimensions (<= 768 and multiples of 64)
     try:
         with Image.open(a_pass_image) as size_probe:
             src_w, src_h = size_probe.size
@@ -38,8 +46,8 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
     payload = {
         "init_images": [init_b64],
         "mask": mask_b64,
-        "prompt": bp.get("prompt",""),
-        "negative_prompt": bp.get("negative",""),
+        "prompt": bp.get("prompt", ""),
+        "negative_prompt": bp.get("negative", ""),
         "denoising_strength": float(bp["denoise"]),
         "cfg_scale": float(bp["cfg"]),
         "steps": int(min(16, int(bp["steps"]))),
@@ -47,7 +55,7 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
         "width": int(tgt_w),
         "height": int(tgt_h),
         "inpainting_fill": 1,
-            "inpaint_only_masked": True,
+        "inpaint_only_masked": True,
         "inpaint_full_res": True,
         "inpaint_full_res_padding": 32,
         "inpainting_mask_invert": 0,
@@ -59,29 +67,43 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
         "alwayson_scripts": {}
     }
 
-    # ADetailer
+    # ADetailer configuration
+    ad_args = []
     if bp.get("use_adetailer", False):
-        payload["alwayson_scripts"]["ADetailer"] = {
-            "args": [{
-                "ad_model": bp.get("ad_model", "face_yolov8n.pt"),
-                "ad_confidence": float(bp.get("ad_confidence", 0.33)),
-                "ad_mask_min_ratio": float(bp.get("ad_mask_min_ratio", 0.01)),
-                "ad_dilate_erode": int(bp.get("ad_dilate_erode", 16)),
-                "ad_mask_blur": int(bp.get("ad_mask_blur", 14)),
-                "ad_inpaint_only_masked": True,
-                "ad_denoising_strength": float(bp.get("ad_denoise", bp["denoise"])),
-                "ad_use_inpaint": True,
-                "ad_use_next_frame": False,
-                "ad_prompt": bp.get("ad_prompt",""),
-                "ad_negative_prompt": bp.get("ad_negative","")
-            }]
-        }
+        ad_args.append({
+            "ad_model": bp.get("ad_model", "face_yolov8n.pt"),
+            "ad_confidence": float(bp.get("ad_confidence", 0.33)),
+            "ad_mask_min_ratio": float(bp.get("ad_mask_min_ratio", 0.01)),
+            "ad_dilate_erode": int(bp.get("ad_dilate_erode", 16)),
+            "ad_mask_blur": int(bp.get("ad_mask_blur", 14)),
+            "ad_inpaint_only_masked": True,
+            "ad_denoising_strength": float(bp.get("ad_denoise", bp["denoise"])),
+            "ad_use_inpaint": True,
+            "ad_use_next_frame": False,
+            "ad_prompt": bp.get("ad_prompt", ""),
+            "ad_negative_prompt": bp.get("ad_negative", "")
+        })
 
-    # ControlNet args
+    if bp.get("use_adetailer2", False):
+        ad_args.append({
+            "ad_model": bp.get("ad2_model", bp.get("ad_model", "face_yolov8n.pt")),
+            "ad_confidence": float(bp.get("ad2_confidence", bp.get("ad_confidence", 0.33))),
+            "ad_mask_min_ratio": float(bp.get("ad2_mask_min_ratio", bp.get("ad_mask_min_ratio", 0.01))),
+            "ad_dilate_erode": int(bp.get("ad2_dilate_erode", bp.get("ad_dilate_erode", 16))),
+            "ad_mask_blur": int(bp.get("ad2_mask_blur", bp.get("ad_mask_blur", 14))),
+            "ad_inpaint_only_masked": True,
+            "ad_denoising_strength": float(bp.get("ad2_denoise", bp.get("ad_denoise", bp["denoise"]))),
+            "ad_use_inpaint": True,
+            "ad_use_next_frame": False,
+            "ad_prompt": bp.get("ad2_prompt", bp.get("ad_prompt", "")),
+            "ad_negative_prompt": bp.get("ad2_negative", bp.get("ad_negative", ""))
+        })
+
+    if ad_args:
+        payload["alwayson_scripts"]["ADetailer"] = {"args": ad_args}
+
+    # ControlNet configuration
     cn_args = []
-    # NOTE: ControlNet API in recent versions expects enum strings for control_mode,
-    # and resize_mode may be validated differently across versions. We avoid setting
-    # resize_mode explicitly and map numeric values to enum strings for control_mode.
     def map_control_mode(value):
         mapping = {
             0: "Balanced",
@@ -94,28 +116,20 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
             return "Balanced"
         return mapping.get(iv, "Balanced")
 
-    # Historically we used two ControlNets. To maximize compatibility with
-    # environments that may not have SDXL ControlNet weights, we prioritize
-    # the second (canny/lineart) unit and skip CN0 if it is not explicitly needed.
-
-    # ControlNet 1: Canny/Lineart with our contour map
     if bp.get("use_controlnet2", False):
         cn2_model = bp.get("controlnet2_model") or "xinsirControlnetCanny_v20"
-        # Many ControlNet API versions expect data URL prefix for base64 inputs
         cn2_image_b64 = f"data:image/png;base64,{contour_b64}"
         cn_args.append({
             "enabled": True,
             "module": bp.get("controlnet2_module", "canny"),
             "model": cn2_model,
             "weight": float(bp.get("controlnet2_weight", 0.44)),
-            # Provide precomputed contour map directly as input image
             "input_image": cn2_image_b64,
             "lowvram": False,
             "processor_res": 512,
             "guidance_start": float(bp.get("controlnet2_guidance_start", 0.25)),
             "guidance_end": float(bp.get("controlnet2_guidance_end", 0.90)),
             "control_mode": map_control_mode(bp.get("controlnet2_mode", 0)),
-            # Sensible defaults for canny module (ignored if module: none)
             "threshold_a": 100,
             "threshold_b": 200,
         })
@@ -125,15 +139,17 @@ def run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path):
 
     r = requests.post(f"{ep}/sdapi/v1/img2img", json=payload, timeout=900)
     if r.status_code != 200:
-        # Surface backend error details to aid debugging instead of generic HTTPError
         raise RuntimeError(f"img2img failed HTTP {r.status_code}: {r.text[:1000]}")
+    
     data = r.json()
     if "images" not in data or not data["images"]:
         raise RuntimeError("No images from A1111")
-    img_b64 = data["images"][0].split(",",1)[-1]
+    
+    img_b64 = data["images"][0].split(",", 1)[-1]
     with open(out_path, "wb") as f:
         f.write(base64.b64decode(img_b64))
     print(f"[B-PASS] Saved: {out_path}")
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -147,11 +163,12 @@ def main():
     face_mask_path = os.path.join(args.workdir, "masks", "face_mask.png")
     contour_map_path = os.path.join(args.workdir, "a_pass", "contour_map.png")
     os.makedirs(args.output, exist_ok=True)
-    # Name the output after the workdir basename (which equals input basename)
+    
     input_name = os.path.basename(os.path.normpath(args.workdir)) or "final"
     out_path = os.path.join(args.output, f"{input_name}.png")
 
     run_a1111(cfg, a_pass_image, face_mask_path, contour_map_path, out_path)
+
 
 if __name__ == "__main__":
     main()

@@ -41,6 +41,15 @@ b_pass:
   ad_prompt: "ultra sharp eyelashes, cat-eye razor eyeliner, detailed eyes, defined eyebrows, precise bold lip liner, glossy lips, cheekbone highlight, glossy nose bridge highlight"
   ad_negative: "smeared mascara, blurry eyelashes, feathered lip liner"
 
+  # ADetailer 2 — optional second face pass
+  use_adetailer2: true
+  ad2_model: "face_yolov8n.pt"
+  ad2_confidence: 0.25
+  ad2_mask_min_ratio: 0.005
+  ad2_dilate_erode: 16
+  ad2_mask_blur: 14
+  ad2_denoise: 0.16
+
 io:
   input_dir: "input"
   work_dir: "work"
