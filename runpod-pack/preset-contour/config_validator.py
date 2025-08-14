@@ -88,12 +88,28 @@ class ConfigValidator:
         if b_pass.get('use_controlnet2'):
             self._validate_controlnet_params(b_pass, 'controlnet2')
         
+        # Режим послідовного запуску з ранньою зупинкою
+        if 'use_sequential_adetailer' in b_pass and not isinstance(b_pass['use_sequential_adetailer'], bool):
+            self.errors.append("b_pass.use_sequential_adetailer must be a boolean")
+        if 'use_true_fallback_adetailer' in b_pass and not isinstance(b_pass['use_true_fallback_adetailer'], bool):
+            self.errors.append("b_pass.use_true_fallback_adetailer must be a boolean")
+
+        # Manual fallback flags
+        if 'enable_manual_fallback' in b_pass and not isinstance(b_pass['enable_manual_fallback'], bool):
+            self.errors.append("b_pass.enable_manual_fallback must be a boolean")
+        if 'open_ui_on_manual' in b_pass and not isinstance(b_pass['open_ui_on_manual'], bool):
+            self.errors.append("b_pass.open_ui_on_manual must be a boolean")
+
         # Перевірка ADetailer параметрів
         if b_pass.get('use_adetailer'):
             self._validate_adetailer_params(b_pass, 'ad')
         
         if b_pass.get('use_adetailer2'):
             self._validate_adetailer_params(b_pass, 'ad2')
+        
+        # Optional third ADetailer pass
+        if b_pass.get('use_adetailer3'):
+            self._validate_adetailer_params(b_pass, 'ad3')
         
         return len([e for e in self.errors if 'b_pass' in e]) == 0
     

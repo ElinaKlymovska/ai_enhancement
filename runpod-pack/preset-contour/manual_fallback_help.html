@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Інструкція: Ручний фолбек маски обличчя</title>
+<style>
+  body { font: 16px/1.4 -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; padding: 24px; color: #0b0b0b; }
+  h1 { font-size: 22px; margin: 0 0 12px; }
+  h2 { font-size: 18px; margin: 24px 0 8px; }
+  code, kbd { background: #f2f2f2; padding: 2px 6px; border-radius: 4px; }
+  ol, ul { margin: 8px 0 16px 20px; }
+  .note { background: #fff8e1; border: 1px solid #ffe082; padding: 10px 12px; border-radius: 6px; }
+  a { color: #1565c0; }
+</style>
+</head>
+<body>
+<h1>Ручний фолбек: як вручну задати маску обличчя</h1>
+
+<p>Ця інструкція відкривається автоматично, якщо <code>ADetailer</code> не зміг знайти обличчя і в конфігурації увімкнено <code>b_pass.enable_manual_fallback: true</code>.</p>
+
+<h2>Шлях до маски</h2>
+<ul>
+  <li>Потрібне ім'я файлу маски: <code>custom_face_mask.png</code> (можна змінити в <code>b_pass.manual_mask_filename</code>).</li>
+  <li>Розташування: <code>runpod-pack/preset-contour/work/&lt;name&gt;/masks/</code>.</li>
+  <li>Замість <code>&lt;name&gt;</code> використовується назва зображення без розширення.</li>
+  <li>Маска — PNG, розмір 1:1 з базовим зображенням.</li>
+  <li>Білий (255) — редагується; чорний (0) — не редагується.</li>
+  <li>Бажано м'які краї (легкий блюр), щоб уникнути різких переходів.</li>
+</ul>
+
+<h2>Варіант A: Намалювати маску у редакторі зображень</h2>
+<ol>
+  <li>Відкрийте файл базового зображення: <code>work/&lt;name&gt;/a_pass/base_enhanced.png</code>.</li>
+  <li>Створіть чорнобілу маску розміром 1:1 з цим зображенням.</li>
+  <li>Забарвіть білі (255) ділянки там, де потрібно інпейнтити обличчя; чорний (0) — все інше.</li>
+  <li>Збережіть маску як <code>work/&lt;name&gt;/masks/custom_face_mask.png</code> (PNG).</li>
+  <li>Перезапустіть B‑Pass (див. нижче).</li>
+</ol>
+
+<h2>Варіант B: Через інтерфейс A1111 (Inpaint)</h2>
+<ol>
+  <li>Відкрийте UI: <a href="http://127.0.0.1:7860" target="_blank" rel="noopener">http://127.0.0.1:7860</a>.</li>
+  <li>Перейдіть до вкладки <strong>img2img</strong> → <strong>Inpaint</strong>.</li>
+  <li>Завантажте <code>work/&lt;name&gt;/a_pass/base_enhanced.png</code>.</li>
+  <li>Пензлем намалюйте маску поверх обличчя (біла зона — редагується).</li>
+  <li>Експортуйте/збережіть отриману маску у <code>work/&lt;name&gt;/masks/custom_face_mask.png</code>.</li>
+  <li>Перезапустіть B‑Pass.</li>
+</ol>
+
+<h2>Перезапуск B‑Pass</h2>
+<ol>
+  <li>Після збереження маски запустіть лише B‑Pass для цього кейсу:</li>
+</ol>
+<pre><code>python3 runpod-pack/preset-contour/run_b_pass.py \
+  --config runpod-pack/preset-contour/config.yaml \
+  --workdir runpod-pack/preset-contour/work/&lt;name&gt; \
+  --output runpod-pack/preset-contour/output
+</code></pre>
+
+<h2>Примітки</h2>
+<ul>
+  <li>Якщо маску не знайдено, скрипт може просто відкрити UI та цю інструкцію.</li>
+  <li>Маска має бути такого ж розміру, як і базове зображення, і у форматі PNG.</li>
+  <li>Якщо маска надто мала — збільште білу область, аби покрити все обличчя.</li>
+  <li>За потреби тимчасово вимкніть <code>ADetailer</code> у конфігу для чистого інпейнту маскою.</li>
+</ul>
+
+<div class="note">
+  Порада: збережіть копію оригінального зображення та маски для швидкого порівняння результатів.
+</div>
+</body>
+</html>

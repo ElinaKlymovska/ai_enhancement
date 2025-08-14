@@ -2,7 +2,6 @@ general:
   backend: "a1111"
   a1111_endpoint: "http://127.0.0.1:7860"
   model_checkpoint: ""
-  # Нові параметри
   max_retries: 3
   retry_delay: 2
   timeout_seconds: 300
@@ -15,6 +14,36 @@ b_pass:
   steps: 32
   sampler: "DPM++ SDE Karras"
   mask_blur_px: 6
+
+  # Run only one ADetailer pass chosen automatically (ad → ad2 → ad3) by quick pre-detection
+  use_sequential_adetailer: true
+  # True fallback: випробувати ad, якщо 0 детекцій → ad2, якщо 0 → ad3 (робить кілька послідовних викликів)
+  use_true_fallback_adetailer: true
+
+  # Manual fallback — якщо всі ADetailer не спрацювали
+  enable_manual_fallback: true
+  manual_mask_filename: "custom_face_mask.png"  # намалюйте/покладіть маску у work/<name>/masks/
+  open_ui_on_manual: true  # відкрити UI за посиланням general.a1111_endpoint
+  open_manual_help_on_manual: true  # відкрити локальні інструкції у браузері
+  manual_help_path: "manual_fallback_help.html"  # шлях до локальної HTML-інструкції
+
+  # Cheek Refiner (FaceMesh/BiSeNet)
+  use_cheek_refiner: true
+  cheek_mask_source: "facemesh"  # facemesh | manual
+  cheek_denoise: 0.16
+  cheek_mask_dilate: 10
+  cheek_mask_blur: 12
+  cheek_prompt: "hyper-realistic cheekbones, crisp cheek lines, glossy cheek highlights, subtle skin texture, cinematic beauty lighting"
+  cheek_negative: "over-smoothing, waxy skin, plastic look, harsh edges, color bleeding"
+
+  # Eyelash Refiner (FaceMesh/BiSeNet)
+  use_eyelash_refiner: true
+  eyelash_mask_source: "facemesh"  # facemesh | manual
+  eyelash_denoise: 0.14
+  eyelash_mask_dilate: 4
+  eyelash_mask_blur: 6
+  eyelash_prompt: "defined, separated eyelashes, crisp individual lashes, no clumping, subtle eyeliner, natural spacing, sharp detail"
+  eyelash_negative: "clumpy lashes, spider lashes, smeared mascara, overly thick lashes, blurred eyelashes"
 
   # ControlNet 0 — SoftEdge SDXL (shape keeper)
   use_controlnet: true
@@ -53,6 +82,17 @@ b_pass:
   ad2_dilate_erode: 16
   ad2_mask_blur: 14
   ad2_denoise: 0.16
+
+  # ADetailer 3 — optional third pass for rotated/low-position faces (more permissive)
+  use_adetailer3: true
+  ad3_model: "face_yolov8n.pt"  # you can change to "face_yolov8l.pt" if available for stronger recall
+  ad3_confidence: 0.15
+  ad3_mask_min_ratio: 0.003
+  ad3_dilate_erode: 20
+  ad3_mask_blur: 18
+  ad3_denoise: 0.18
+  # ad3_prompt: ""
+  # ad3_negative: ""
 
 io:
   input_dir: "input"

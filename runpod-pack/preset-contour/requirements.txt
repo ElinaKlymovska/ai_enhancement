@@ -3,3 +3,5 @@ pyyaml
 requests
 tqdm
 typing-extensions
+opencv-python-headless
+mediapipe
