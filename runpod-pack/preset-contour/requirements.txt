@@ -1,3 +1,5 @@
 pillow
 pyyaml
 requests
+tqdm
+typing-extensions

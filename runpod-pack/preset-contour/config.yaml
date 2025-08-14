@@ -2,6 +2,10 @@ general:
   backend: "a1111"
   a1111_endpoint: "http://127.0.0.1:7860"
   model_checkpoint: ""
+  # Нові параметри
+  max_retries: 3
+  retry_delay: 2
+  timeout_seconds: 300
 
 b_pass:
   prompt: "ultra sharp contouring, very strong cheekbone definition, precise cheek lines, crisp jawline and face oval, defined eyelashes, sharp eyeliner, volumized lashes, defined eyebrows, precise lip liner, rich lipstick, subtle blush, glossy skin highlights, dewy specular highlights on cheekbones and nose bridge, high-detail eyes, slight nose contour, cinematic portrait lighting, studio beauty photo"
@@ -54,3 +58,36 @@ io:
   input_dir: "input"
   work_dir: "work"
   output_dir: "output"
+  # Нові параметри
+  supported_formats: ["png", "jpg", "jpeg", "webp"]
+  backup_original: true
+  create_thumbnails: false
+
+# Нова секція для налаштування якості
+quality:
+  # Автоматичне тестування якості результатів
+  enable_quality_check: true
+  min_face_detection_confidence: 0.5
+  max_blur_threshold: 100
+  min_sharpness_score: 0.6
+  
+  # Налаштування для різних типів зображень
+  portrait_mode:
+    enhanced_cheekbones: true
+    enhanced_eyes: true
+    enhanced_lips: true
+    skin_smoothing: 0.3
+  
+  group_mode:
+    enhanced_cheekbones: false
+    enhanced_eyes: true
+    enhanced_lips: false
+    skin_smoothing: 0.5
+
+# Нова секція для логування
+logging:
+  level: "INFO"
+  file_logging: true
+  log_file: "adetailer_batch.log"
+  max_log_size_mb: 10
+  backup_count: 3
